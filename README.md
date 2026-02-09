@@ -34,7 +34,7 @@ git clone [https://github.com/ahmadshh208/Ahmadsh-CamTrack-AIO.git](https://gith
 cd Ahmadsh-CamTrack-AIO
 
 # تشغيل الأداة
-python ahmadsh.py
+python main.py
 🌐 تثبيت الأنفاق (Tunnels Setup) للمبتدئين
 للعمل خارج شبكة الواي فاي الخاصة بك (اختراق خارجي)، يجب تثبيت أحد هذه الأنفاق:
 1️⃣ نفق Cloudflared (الخيار الأسهل والموصى به):
